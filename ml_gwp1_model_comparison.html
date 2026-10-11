@@ -7517,9 +7517,8 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="MScFE-632-%E2%80%94-Machine-Learning-in-Finance">MScFE 632 — Machine Learning in Finance<a class="anchor-link" href="#MScFE-632-%E2%80%94-Machine-Learning-in-Finance">¶</a></h1><h2 id="GWP1:-Comparing-seven-machine-learning-methods">GWP1: Comparing seven machine learning methods<a class="anchor-link" href="#GWP1:-Comparing-seven-machine-learning-methods">¶</a></h2><p>This notebook compares seven methods from the course using a stock-month dataset. We use Ridge regression to predict the supplied forward one-month return. A classification tree, Linear Discriminant Analysis (LDA), a Support Vector Machine (SVM), and a neural network predict whether the absolute return exceeds 4%. This label identifies larger moves in either direction; it does not tell us whether to buy or sell. K-means and Principal Component Analysis (PCA) are used to explore the input features.</p>
-<p>The aim is to understand what each method does and where it struggles with the same small dataset. We keep the model searches fairly small and reserve the last four years for testing. This is the computational part of GWP1; the examples cover all seven categories.</p>
-<p><strong>Run:</strong> keep <code>data/mlfac_gwp1.csv</code> next to this notebook in its <code>data</code> folder, then restart the kernel and run all cells. No download or API key is needed. The package versions used for the saved results appear below.</p>
+<h1 id="MScFE-632-%E2%80%94-Machine-Learning-in-Finance">MScFE 632 — Machine Learning in Finance<a class="anchor-link" href="#MScFE-632-%E2%80%94-Machine-Learning-in-Finance">¶</a></h1><h2 id="GWP1:-Comparing-seven-machine-learning-methods">GWP1: Comparing seven machine learning methods<a class="anchor-link" href="#GWP1:-Comparing-seven-machine-learning-methods">¶</a></h2><p>We use the stock data from Module 3 to compare seven methods from the course. Ridge regression predicts the next month's return. The classification tree, LDA, SVM, and neural network predict whether the stock will move by more than 4% in either direction. K-means and PCA help us look at patterns in the six input features.</p>
+<p>We fit and tune the models using the earlier years, then compare their results on 2015–2018 data.</p>
 </div>
 </div>
 </div>
@@ -7530,8 +7529,8 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="1.-Data-and-setup">1. Data and setup<a class="anchor-link" href="#1.-Data-and-setup">¶</a></h3><p>We use the <code>mlfac_dat.csv</code> file supplied with Module 3. The local file has 50 anonymous stock IDs and 11,284 monthly observations from 2000 to 2018. The accompanying CSV keeps the six features, the return, the date, and the stock ID. No rows were removed when making this copy.</p>
-<p>Two details matter here. The source documentation defines <code>R1M_Usd</code> as a <strong>forward one-month total return</strong>, including dividends, so we do not shift it again. The features have already been uniformized separately at each date. A value of 0.8 is a relative position in the source cross-section, not an original dollar amount or ratio. The 50-stock course file is a subset of that source universe. <a href="https://www.mlfactor.com/notdata.html">Coqueret and Guida, data preparation</a>.</p>
+<h3 id="1.-Data-and-setup">1. Data and setup<a class="anchor-link" href="#1.-Data-and-setup">¶</a></h3><p>The data come from <code>mlfac_dat.csv</code> in Module 3. There are 11,284 monthly observations for 50 stocks, covering 2000–2018. We keep six features, the one-month return, the date, and the stock ID.</p>
+<p>The source documentation defines <code>R1M_Usd</code> as a <strong>forward one-month total return</strong>, including dividends, so we do not shift it again. The features have already been uniformized separately at each date. A value of 0.8 is a relative position in the source cross-section, not an original dollar amount or ratio. The 50-stock course file is a subset of that source universe. <a href="https://www.mlfactor.com/notdata.html">Coqueret and Guida, data preparation</a>.</p>
 <table>
 <thead>
 <tr>
@@ -7566,11 +7565,11 @@ a.anchor-link {
 </tr>
 </tbody>
 </table>
-<p>In particular, <code>Vol1Y_Usd</code> measures return volatility, rather than trading volume. These definitions follow the <a href="https://www.mlfactor.com/data-description.html">source data dictionary</a>. Stock IDs and dates are used for checks and splitting, not as model inputs. Other forward-return columns are excluded.</p>
+<p>In particular, <code>Vol1Y_Usd</code> measures return volatility, rather than trading volume. These definitions follow the <a href="https://www.mlfactor.com/data-description.html">source data dictionary</a>. We use only the six features in the table as model inputs.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=8cb1862d">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=8cb1862d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7578,13 +7577,7 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">platform</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">importlib.metadata</span><span class="w"> </span><span class="kn">import</span> <span class="n">version</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span>
@@ -7593,10 +7586,9 @@ a.anchor-link {
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.decomposition</span><span class="w"> </span><span class="kn">import</span> <span class="n">PCA</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.discriminant_analysis</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearDiscriminantAnalysis</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.dummy</span><span class="w"> </span><span class="kn">import</span> <span class="n">DummyClassifier</span><span class="p">,</span> <span class="n">DummyRegressor</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvergenceWarning</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Ridge</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">accuracy_score</span><span class="p">,</span> <span class="n">balanced_accuracy_score</span><span class="p">,</span> <span class="n">confusion_matrix</span><span class="p">,</span>
+    <span class="n">accuracy_score</span><span class="p">,</span> <span class="n">balanced_accuracy_score</span><span class="p">,</span>
     <span class="n">ConfusionMatrixDisplay</span><span class="p">,</span> <span class="n">f1_score</span><span class="p">,</span> <span class="n">mean_absolute_error</span><span class="p">,</span>
     <span class="n">r2_score</span><span class="p">,</span> <span class="n">root_mean_squared_error</span><span class="p">,</span> <span class="n">roc_auc_score</span><span class="p">,</span> <span class="n">roc_curve</span><span class="p">,</span>
     <span class="n">silhouette_score</span><span class="p">,</span>
@@ -7613,73 +7605,11 @@ a.anchor-link {
             <span class="s1">'Return_On_Capital'</span><span class="p">,</span> <span class="s1">'Roe'</span><span class="p">,</span> <span class="s1">'Pe'</span><span class="p">]</span>
 <span class="n">LABELS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'Market cap'</span><span class="p">,</span> <span class="s1">'P/B'</span><span class="p">,</span> <span class="s1">'Volatility'</span><span class="p">,</span> <span class="s1">'ROC'</span><span class="p">,</span> <span class="s1">'ROE'</span><span class="p">,</span> <span class="s1">'P/E'</span><span class="p">]</span>
 <span class="n">THRESHOLD</span> <span class="o">=</span> <span class="mf">0.04</span>
-<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s1">'error'</span><span class="p">,</span> <span class="n">ConvergenceWarning</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">'figure.dpi'</span><span class="p">:</span> <span class="mi">110</span><span class="p">,</span> <span class="s1">'axes.spines.top'</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
                      <span class="s1">'axes.spines.right'</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">'font.size'</span><span class="p">:</span> <span class="mi">10</span><span class="p">})</span>
 <span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">'display.precision'</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
 <span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">'display.max_colwidth'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-
-<span class="n">display</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">({</span>
-    <span class="s1">'Python'</span><span class="p">:</span> <span class="n">platform</span><span class="o">.</span><span class="n">python_version</span><span class="p">(),</span>
-    <span class="o">**</span><span class="p">{</span><span class="n">p</span><span class="p">:</span> <span class="n">version</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'numpy'</span><span class="p">,</span> <span class="s1">'pandas'</span><span class="p">,</span> <span class="s1">'scikit-learn'</span><span class="p">,</span> <span class="s1">'matplotlib'</span><span class="p">]}</span>
-<span class="p">},</span> <span class="n">name</span><span class="o">=</span><span class="s1">'Version'</span><span class="p">)</span><span class="o">.</span><span class="n">to_frame</span><span class="p">())</span>
 </pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
-<div>
-<style scoped="">
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-<thead>
-<tr style="text-align: right;">
-<th></th>
-<th>Version</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>Python</th>
-<td>3.14.0</td>
-</tr>
-<tr>
-<th>numpy</th>
-<td>2.4.1</td>
-</tr>
-<tr>
-<th>pandas</th>
-<td>2.3.3</td>
-</tr>
-<tr>
-<th>scikit-learn</th>
-<td>1.9.0</td>
-</tr>
-<tr>
-<th>matplotlib</th>
-<td>3.10.8</td>
-</tr>
-</tbody>
-</table>
-</div>
 </div>
 </div>
 </div>
@@ -7692,28 +7622,14 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># Support running from this folder or from the repository root.</span>
-<span class="n">data_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">Path</span><span class="p">(</span><span class="s1">'data/mlfac_gwp1.csv'</span><span class="p">),</span>
-              <span class="n">Path</span><span class="p">(</span><span class="s1">'modules/5_ML_IN_FINANCE/GWP1/data/mlfac_gwp1.csv'</span><span class="p">)]</span>
-<span class="n">data_path</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">data_paths</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_file</span><span class="p">()),</span> <span class="kc">None</span><span class="p">)</span>
-<span class="k">if</span> <span class="n">data_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s1">'Keep data/mlfac_gwp1.csv in the GWP1 folder.'</span><span class="p">)</span>
-
-<span class="n">expected_hash</span> <span class="o">=</span> <span class="s1">'e4a5242194d9609920d9dff2997e25791782814c1a49d48a319f3c87a55dd8b7'</span>
-<span class="k">assert</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">data_path</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span> <span class="o">==</span> <span class="n">expected_hash</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">parse_dates</span><span class="o">=</span><span class="p">[</span><span class="s1">'date'</span><span class="p">])</span>
-<span class="k">assert</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">11284</span><span class="p">,</span> <span class="mi">9</span><span class="p">)</span>
-<span class="k">assert</span> <span class="ow">not</span> <span class="n">data</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
-<span class="k">assert</span> <span class="ow">not</span> <span class="n">data</span><span class="o">.</span><span class="n">duplicated</span><span class="p">([</span><span class="s1">'stock_id'</span><span class="p">,</span> <span class="s1">'date'</span><span class="p">])</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
-<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">FEATURES</span> <span class="o">+</span> <span class="p">[</span><span class="s1">'R1M_Usd'</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
-<span class="k">assert</span> <span class="n">data</span><span class="p">[</span><span class="s1">'date'</span><span class="p">]</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">is_month_end</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
-<span class="k">assert</span> <span class="n">data</span><span class="p">[</span><span class="n">FEATURES</span><span class="p">]</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="n">FEATURES</span><span class="p">]</span><span class="o">.</span><span class="n">le</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
-
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">'data/mlfac_gwp1.csv'</span><span class="p">,</span> <span class="n">parse_dates</span><span class="o">=</span><span class="p">[</span><span class="s1">'date'</span><span class="p">])</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s1">'date'</span><span class="p">,</span> <span class="s1">'stock_id'</span><span class="p">])</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">data</span><span class="p">[</span><span class="s1">'large_move'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">'R1M_Usd'</span><span class="p">]</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">THRESHOLD</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
 <span class="n">display</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Rows: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">; stocks: </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">stock_id</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span><span class="si">}</span><span class="s2">; "</span>
-      <span class="sa">f</span><span class="s2">"months: </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span><span class="si">}</span><span class="s2">; missing values: </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Rows: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">; stocks: </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">stock_id</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span><span class="si">}</span><span class="s2">; months: </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'Missing values:'</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">'Duplicate stock-months:'</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">duplicated</span><span class="p">([</span><span class="s1">'stock_id'</span><span class="p">,</span> <span class="s1">'date'</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -7830,7 +7746,9 @@ a.anchor-link {
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Rows: 11,284; stocks: 50; months: 228; missing values: 0
+<pre>Rows: 11,284; stocks: 50; months: 228
+Missing values: 0
+Duplicate stock-months: 0
 </pre>
 </div>
 </div>
@@ -7843,11 +7761,11 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="2.-Targets-and-a-time-based-comparison">2. Targets and a time-based comparison<a class="anchor-link" href="#2.-Targets-and-a-time-based-comparison">¶</a></h3><p>The regression target is $r_{t+1}$, the supplied forward monthly total return. Following the tree example in Module 3, the classification target is</p>
+<h3 id="2.-Targets-and-time-split">2. Targets and time split<a class="anchor-link" href="#2.-Targets-and-time-split">¶</a></h3><p>The regression target is the next month's total return, $r_{t+1}$. Following Module 3, we also create a classification target:</p>
 <p>$$y_t = \mathbf{1}\{|r_{t+1}| &gt; 0.04\}.$$</p>
-<p>Class 1 therefore includes both gains above 4% and losses below −4%. The cutoff is fixed before fitting. We use it to stay close to the lesson, rather than because 4% has been shown to be an optimal trading rule.</p>
-<p>The development period ends in November 2014. December 2014 is left out, and January 2015–December 2018 is the holdout period. Within development, we use three expanding time splits, each with 36 validation months and a one-month gap. Splitting the unique dates first keeps all stocks from the same month together. We assume a forward one-month label is available by the end of the following month.</p>
-<p>All scaling is fitted inside the supervised pipelines, separately for each training fold. Ridge is selected by validation mean squared error; the four classifiers are selected by validation ROC AUC. AUC measures ranking across thresholds, while the later confusion matrices use each model's default classification rule. The grids and the split are set here, before looking at holdout performance. See the <a href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html">TimeSeriesSplit documentation</a> for the expanding-window scheme.</p>
+<p>Class 1 includes both gains above 4% and losses below −4%. It represents a large move, without predicting its direction.</p>
+<p>We use January 2000–November 2014 to fit and select the models, and January 2015–December 2018 as the test period. We leave out December 2014 to allow a gap for the forward-return labels. Within the earlier period, we use three expanding time splits, each with 36 validation months and a one-month gap. All stocks from the same month stay together.</p>
+<p>Scaling uses the training data in each fold. We choose Ridge's penalty by validation mean squared error and the classifiers' parameters by validation ROC AUC. The confusion matrices later use the default decision thresholds. The split follows scikit-learn's <a href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html">TimeSeriesSplit</a>.</p>
 </div>
 </div>
 </div>
@@ -7866,11 +7784,7 @@ a.anchor-link {
 <span class="n">y_dev</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">dev</span><span class="p">[</span><span class="s1">'R1M_Usd'</span><span class="p">],</span> <span class="n">test</span><span class="p">[</span><span class="s1">'R1M_Usd'</span><span class="p">]</span>
 <span class="n">c_dev</span><span class="p">,</span> <span class="n">c_test</span> <span class="o">=</span> <span class="n">dev</span><span class="p">[</span><span class="s1">'large_move'</span><span class="p">],</span> <span class="n">test</span><span class="p">[</span><span class="s1">'large_move'</span><span class="p">]</span>
 
-<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">dev</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">gap</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">test</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-<span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="n">dev</span><span class="o">.</span><span class="n">date</span><span class="p">)</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">test</span><span class="o">.</span><span class="n">date</span><span class="p">))</span>
-<span class="k">assert</span> <span class="n">dev</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="n">pd</span><span class="o">.</span><span class="n">offsets</span><span class="o">.</span><span class="n">MonthEnd</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">test</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
-<span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="n">test</span><span class="o">.</span><span class="n">stock_id</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">dev</span><span class="o">.</span><span class="n">stock_id</span><span class="p">))</span>
-
+<span class="c1"># Keep all stocks from the same month in the same fold.</span>
 <span class="n">months</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">dev</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
 <span class="n">month_splitter</span> <span class="o">=</span> <span class="n">TimeSeriesSplit</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mi">36</span><span class="p">,</span> <span class="n">gap</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">cv_splits</span><span class="p">,</span> <span class="n">split_rows</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
@@ -7878,9 +7792,6 @@ a.anchor-link {
     <span class="n">train_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">dev</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">months</span><span class="p">[</span><span class="n">train_months</span><span class="p">]))</span>
     <span class="n">valid_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">dev</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">months</span><span class="p">[</span><span class="n">valid_months</span><span class="p">]))</span>
     <span class="n">train_dates</span><span class="p">,</span> <span class="n">valid_dates</span> <span class="o">=</span> <span class="n">dev</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">train_idx</span><span class="p">],</span> <span class="n">dev</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">valid_idx</span><span class="p">]</span>
-    <span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="n">train_dates</span><span class="p">)</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">valid_dates</span><span class="p">))</span>
-    <span class="k">assert</span> <span class="n">train_dates</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="n">pd</span><span class="o">.</span><span class="n">offsets</span><span class="o">.</span><span class="n">MonthEnd</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">valid_dates</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
-    <span class="k">assert</span> <span class="n">c_dev</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">train_idx</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span> <span class="o">==</span> <span class="n">c_dev</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">valid_idx</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span> <span class="o">==</span> <span class="mi">2</span>
     <span class="n">cv_splits</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">train_idx</span><span class="p">,</span> <span class="n">valid_idx</span><span class="p">))</span>
     <span class="n">split_rows</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
         <span class="s1">'Fold'</span><span class="p">:</span> <span class="n">fold</span><span class="p">,</span> <span class="s1">'Training start'</span><span class="p">:</span> <span class="n">train_dates</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">date</span><span class="p">(),</span>
@@ -8061,9 +7972,8 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>The same stock can appear on both sides of a time split. This experiment asks whether a fitted relationship carries into later months for this stock sample; it does not test generalization to new companies. The gap reduces overlap from forward labels, but it cannot repair unknown reporting delays or survivorship bias in a preprocessed dataset.</p>
-<p>Before fitting, we inspect only the development sample. Returns are kept as supplied, including extreme observations. This makes squared-error results sensitive to unusually large returns, but avoids choosing a cleaning rule after seeing the test results.</p>
-<p>The largest development return is 500% in one month. We could not independently check that observation. Keeping it unchanged is transparent, but it is a limitation of this teaching sample and a reason to report MAE alongside RMSE.</p>
+<p>The same stocks appear in the earlier and later periods, so this is a test on later months rather than on new companies.</p>
+<p>The development returns include a 500% monthly observation. We keep the supplied values because we cannot check that observation against the original stock history. Such large returns can have a strong effect on squared error, so we also report MAE.</p>
 </div>
 </div>
 </div>
@@ -8344,7 +8254,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput celltag_ridge_observation" data-mime-type="text/markdown">
-<p>The search selects $\alpha=1000$, the largest value in the grid. The validation error changes very little across the five candidates: the square root of mean CV MSE stays close to 11.8 percentage points. Among these candidates, stronger shrinkage gives a slightly lower validation error, but the improvement is small. The path also shows that individual coefficients need not shrink monotonically when features are correlated. This is a bounded search, not evidence that 1000 is the best possible penalty.</p>
+<p>The lowest validation error occurs at $\alpha=1000$, the largest value we try. However, all five results are close to 11.8 percentage points. More shrinkage helps slightly within this range. The coefficient plot shows how the estimates move toward zero, although some individual paths are not monotonic because the features are correlated.</p>
 </div>
 </div>
 </div>
@@ -8560,7 +8470,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput celltag_cluster_observation" data-mime-type="text/markdown">
-<p>Two clusters give the highest sampled silhouette score, 0.255, with 4,413 and 4,445 stock-months. The clearest differences are in profitability and P/B: cluster 1 has higher ROC, ROE, and P/B ranks, while cluster 0 has lower values. Their average volatility ranks are almost the same. The modest silhouette score suggests overlapping profiles rather than two sharply separated types of stock. Cluster numbers are arbitrary labels, not a ranking of investment quality.</p>
+<p>Two clusters give the highest silhouette score, 0.255. They contain 4,413 and 4,445 stock-months. Cluster 1 has higher ROC, ROE, and P/B ranks, while cluster 0 has lower values. Their average volatility ranks are almost the same. The groups still overlap quite a bit, so they seem more useful as broad feature profiles than as two distinct types of stock.</p>
 </div>
 </div>
 </div>
@@ -8954,7 +8864,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput celltag_tree_observation" data-mime-type="text/markdown">
-<p>The selected tree has depth 3 and a minimum leaf size of 50, with mean validation AUC of 0.6084. Its first split is on volatility at a supplied rank of about 0.53. Volatility also accounts for 91.4% of its total impurity-based importance. This is a sensible relationship for an absolute-return target, although it does not establish causality. The smaller importance values for the remaining features describe this fitted tree, not their value in every possible model.</p>
+<p>The selected tree has depth 3 and a minimum leaf size of 50, with validation AUC of 0.6084. Its first split is on volatility at a rank of about 0.53. Volatility accounts for 91.4% of the tree's impurity-based importance. This makes sense for a target based on absolute returns. The other features contribute much less to this particular tree.</p>
 </div>
 </div>
 </div>
@@ -9072,7 +8982,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput celltag_lda_observation" data-mime-type="text/markdown">
-<p>The ordinary covariance estimate is selected, but both settings round to the same mean validation AUC of 0.6163. We would not read much into such a small difference. The score histograms overlap substantially, so the linear score separates the groups only partly. LDA still provides a useful simple comparison: a more flexible classifier should add something beyond this level of separation to justify its extra complexity.</p>
+<p>LDA selects the ordinary covariance estimate, although both settings give almost the same validation AUC of 0.6163. The two score distributions overlap substantially. There is some separation, but many small and large moves receive similar scores.</p>
 </div>
 </div>
 </div>
@@ -9219,7 +9129,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput celltag_svm_observation" data-mime-type="text/markdown">
-<p>The selected values are $C=0.1$ and $\gamma=0.1$, with mean validation AUC of 0.5838. Larger values of $C$ do not help within this grid. Most of the plotted slice has a positive score, especially at higher volatility ranks, so it mostly predicts a large move there. The contour describes inputs with four features fixed at their medians; it is not a map of every observed stock. The scores should not be read as calibrated event probabilities.</p>
+<p>The selected values are $C=0.1$ and $\gamma=0.1$, with validation AUC of 0.5838. Larger values of $C$ do not help here. Most of the plotted slice has a positive score, especially at higher volatility ranks. With the other four features fixed at their medians, the SVM therefore predicts a large move over most of this area.</p>
 </div>
 </div>
 </div>
@@ -9234,7 +9144,7 @@ a.anchor-link {
 <p>$$h=\operatorname{ReLU}(W_1x+b_1),\qquad
 \hat p=\sigma(w_2^\top h+b_2).$$</p>
 <p>It receives the six scaled inputs and returns an estimated probability of a large move. The weights are fitted by backpropagation, using cross-entropy loss with an L2 penalty. We compare 8 and 16 hidden units and two penalty values. ReLU and Adam are fixed, as are the seed, batch size, learning rate, and iteration limit.</p>
-<p>The implementation uses scikit-learn's <code>MLPClassifier</code>, which is a dense neural network like the one introduced in Module 5. It avoids needing a separate deep-learning package for this small example. A network can learn nonlinear combinations of features, but its result depends on optimization and is less interpretable. We disable its random internal validation split (<code>early_stopping=False</code>) and use the shared time folds for model selection. We also check that training converges within the iteration limit. <a href="https://scikit-learn.org/stable/modules/neural_networks_supervised.html">MLP documentation</a>.</p>
+<p>We use scikit-learn's <code>MLPClassifier</code> for the dense network introduced in Module 5. It can learn nonlinear combinations of the features, but the weights are harder to interpret than a tree's splits. We set <code>early_stopping=False</code> so that model selection uses our time folds instead of a random internal validation split. <a href="https://scikit-learn.org/stable/modules/neural_networks_supervised.html">MLP documentation</a>.</p>
 </div>
 </div>
 </div>
@@ -9367,7 +9277,7 @@ Trainable parameters: 65
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput celltag_network_observation" data-mime-type="text/markdown">
-<p>The selected network has 8 hidden units and an L2 penalty of 0.001. It has only 65 trainable parameters and a mean validation AUC of 0.6128. The development fit stops after 137 epochs, within the 600-epoch limit, and its loss curve flattens early. A flat training curve tells us that further optimization has slowed; it does not establish that the model will generalize. Increasing the hidden layer to 16 units did not improve the mean validation score in this search.</p>
+<p>The selected network has 8 hidden units, an L2 penalty of 0.001, and 65 trainable parameters. Its validation AUC is 0.6128. Training stops after 137 epochs, and the loss changes little toward the end. Increasing the hidden layer to 16 units does not improve the average validation score.</p>
 </div>
 </div>
 </div>
@@ -9378,7 +9288,7 @@ Trainable parameters: 65
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="10.-Holdout-results:-2015%E2%80%932018">10. Holdout results: 2015–2018<a class="anchor-link" href="#10.-Holdout-results:-2015%E2%80%932018">¶</a></h3><p>All choices above are now fixed. Each selected model has been refitted on the full development period, and the fitted models stay unchanged throughout the holdout. The first baseline predicts the development mean return. The classification baseline predicts the development majority class and assigns a constant class probability.</p>
+<h3 id="10.-Holdout-results:-2015%E2%80%932018">10. Holdout results: 2015–2018<a class="anchor-link" href="#10.-Holdout-results:-2015%E2%80%932018">¶</a></h3><p>We refit the selected models on the full development period and test them on 2015–2018. For comparison, the return baseline predicts the development mean, while the classification baseline always predicts the more common class. We keep the fitted models unchanged during the test period.</p>
 <p>The two tasks need separate tables. For returns, we report root mean squared error (RMSE), mean absolute error (MAE), and $R^2$. RMSE and MAE are in percentage points of monthly return. For classification, we report ROC AUC, balanced accuracy, ordinary accuracy, and F1 for the large-move class. The majority baseline matters because the classes are not evenly balanced. No decision threshold is tuned on the test set.</p>
 </div>
 </div>
@@ -9424,10 +9334,6 @@ Trainable parameters: 65
 <span class="n">classification_results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">classification_rows</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">'Model'</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'Large-move classification; holdout class 1 share = </span><span class="si">{</span><span class="n">c_test</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s1">.2%</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
 <span class="n">display</span><span class="p">(</span><span class="n">classification_results</span><span class="p">)</span>
-
-<span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pred</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">test</span><span class="p">)</span> <span class="k">for</span> <span class="n">pred</span> <span class="ow">in</span> <span class="n">return_predictions</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-<span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">score</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="k">for</span> <span class="n">score</span> <span class="ow">in</span> <span class="n">class_scores</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">classification_results</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">'Majority baseline'</span><span class="p">,</span> <span class="s1">'ROC AUC'</span><span class="p">],</span> <span class="mf">0.5</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -9648,7 +9554,7 @@ Trainable parameters: 65
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Monthly observations from different stocks are not independent. They share market conditions, and the same stocks appear repeatedly. A pooled score can therefore hide differences between years. The table below breaks down the frozen predictions by year. It is a descriptive check, not a second round of model selection or a test of statistical significance.</p>
+<p>We also compare AUC by year, since the overall score can hide changes across market periods.</p>
 </div>
 </div>
 </div>
@@ -9779,7 +9685,7 @@ Trainable parameters: 65
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="11.-What-we-take-from-the-comparison">11. What we take from the comparison<a class="anchor-link" href="#11.-What-we-take-from-the-comparison">¶</a></h3><table>
+<h3 id="11.-Model-comparison">11. Model comparison<a class="anchor-link" href="#11.-Model-comparison">¶</a></h3><table>
 <thead>
 <tr>
 <th>Method</th>
@@ -9833,7 +9739,7 @@ Trainable parameters: 65
 </tr>
 </tbody>
 </table>
-<p>Clustering, dimension reduction, return estimation, and classification solve different problems. It would not make sense to rank all seven using one performance number. None of these examples establishes a profitable strategy: a large-move label does not provide a direction, and the notebook does not model trading costs or positions.</p>
+<p>These methods have different jobs, so we compare their uses as well as their prediction results. K-means and PCA describe the features; Ridge estimates returns; the four classifiers identify large moves.</p>
 </div>
 </div>
 </div>
@@ -9844,8 +9750,8 @@ Trainable parameters: 65
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput celltag_conclusion" data-mime-type="text/markdown">
-<p>The main result for us is that adding flexibility does not automatically improve the forecast. LDA's holdout AUC is close to the small network's, even though it uses a simpler decision boundary. The RBF SVM has a weaker ranking score and predicts the majority class most of the time. Ridge shows how to regularize a return model, but its test result gives no reason to prefer it over the mean baseline here.</p>
-<p>K-means and PCA are more helpful for describing the inputs: both highlight the relationship between profitability and valuation ranks. We would use those results to understand the sample, rather than present them as evidence of alpha. The seven methods are useful in different ways, and the baselines make their limits easier to see.</p>
+<p>LDA and the neural network have similar test AUCs, despite their different complexity. The SVM has a lower AUC and predicts the large-move class most of the time. Ridge does not improve on the mean-return baseline. For this dataset, a more flexible model does not necessarily give a better prediction.</p>
+<p>K-means and PCA show a clear relationship between profitability and valuation ranks. They help describe the sample, but this is different from forecasting returns. The classification results also do not give a trading direction, so we cannot infer a profitable strategy from them.</p>
 </div>
 </div>
 </div>
@@ -9856,8 +9762,8 @@ Trainable parameters: 65
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="12.-Limitations-and-sources">12. Limitations and sources<a class="anchor-link" href="#12.-Limitations-and-sources">¶</a></h3><p>The sample is small in terms of companies, and the stock IDs are anonymous. We cannot verify the original universe selection, delisting treatment, or when every accounting input became available. A chronological split helps with the evaluation order, but it does not establish that the source features were available to an investor at the date shown. We keep extreme returns rather than deciding retrospectively which ones to remove.</p>
-<p>The feature set, 4% cutoff, and search grids are deliberately limited. The network is fitted with one seed, and the classifiers are not probability-calibrated. We have not estimated uncertainty with a time-block bootstrap. A useful next exercise would be to check the frozen setup on a separate period or dataset, then study a direction-specific target with realistic publication lags and costs.</p>
+<h3 id="12.-Limitations-and-sources">12. Limitations and sources<a class="anchor-link" href="#12.-Limitations-and-sources">¶</a></h3><p>The data cover only 50 anonymous stocks. We do not know how the original stock universe was selected, how delisted stocks were treated, or when the accounting figures became available. The extreme returns are another limitation. A chronological split cannot resolve these issues in the source data.</p>
+<p>We use six features, small parameter grids, and one random seed for the neural network. Results could change with a different period or set of stocks. Observations from the same month also share market conditions, so small differences between the model scores should be treated cautiously. A trading application would need a direction-specific target, realistic reporting dates, and transaction costs.</p>
 <p><strong>Course material used:</strong> WorldQuant University, <em>MScFE 632 Machine Learning in Finance</em>, GWP1 brief (2026); Module 1 regularization; Module 2 clustering and PCA; Module 3 classification trees and Bayesian classification; Module 5 support vector machines and neural networks. These supplied lessons guide the methods, the six features, and the absolute-return label. The code, time splits, and comparisons in this notebook are assembled for this experiment.</p>
 <p><strong>Data and implementation references</strong> (accessed 11 Oct. 2026):</p>
 <ol>
